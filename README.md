@@ -1,16 +1,14 @@
-# SkiTracker — Alpine Telemetry & Metabolic Engine
+# SkiTracker: Alpine Telemetry and Metabolic Engine
 
-The core activity recognition and metabolic expenditure algorithms behind **SkiApp**: automatic classification of GPS telemetry into downhill skiing, chairlift/gondola ascents, and stationary intervals, paired with speed-adjusted MET calorie estimation.
+SkiTracker provides activity recognition and metabolic expenditure algorithms for ski tracking. The engine classifies GPS telemetry into downhill skiing, chairlift or gondola ascents, and stationary stops. It pairs classification with speed-adjusted MET calorie calculations. Pure Kotlin implementation with zero platform dependencies.
 
-> **Architecture note:** This repository publishes only the internal algorithmic modules and their unit test specifications for transparency and auditability. It does not contain the Android application shell, foreground GPS services, Room persistence layer, or Gradle build system.
-
-| File | What it computes |
+| File | Role |
 |---|---|
-| `src/ActivityRecognizer.kt` | Hysteresis-stabilized classifier distinguishing `SKIING` ($5\text{–}30\text{ m/s}$, $\Delta z/\Delta t < -0.5\text{ m/s}$), `LIFT` ($2\text{–}8\text{ m/s}$, $\Delta z/\Delta t > +0.5\text{ m/s}$), and `STATIONARY` ($< 1.5\text{ m/s}$) over a sliding window of GPS samples |
-| `src/CalorieCalculator.kt` | Metabolic Equivalent of Task (MET) expenditure model ($\text{kcal/min} = \frac{\text{MET} \times m_{\text{kg}} \times 3.5}{200}$) dynamically scaled by activity state and downhill speed ($4.3\text{–}8.0\text{ MET}$) |
-| `src/TelemetryModels.kt` | Pure data structures (`LocationPoint`, `ActivityType`) |
-| `tests/ActivityRecognizerTest.kt` | Unit test specification for state transitions, hysteresis anti-flapping, and vertical rate thresholds |
-| `tests/CalorieCalculatorTest.kt` | Unit test specification for intensity tiers and body-mass scaling |
+| `src/ActivityRecognizer.kt` | Hysteresis classifier separating `SKIING` (5 to 30 m/s, vertical speed < -0.5 m/s), `LIFT` (2 to 8 m/s, vertical speed > 0.5 m/s), and `STATIONARY` (< 1.5 m/s) over sliding GPS windows |
+| `src/CalorieCalculator.kt` | Metabolic expenditure model ($\text{kcal/min} = \frac{\text{MET} \times m_{\text{kg}} \times 3.5}{200}$) scaled by activity state and descent speed (4.3 to 8.0 MET) |
+| `src/TelemetryModels.kt` | Telemetry types (`LocationPoint`, `ActivityType`) |
+| `tests/ActivityRecognizerTest.kt` | Tests for state transitions, vertical speed thresholds, and hysteresis anti-flapping |
+| `tests/CalorieCalculatorTest.kt` | Tests for MET intensity tiers and body mass scaling |
 
 ## Algorithmic Model
 
@@ -21,19 +19,18 @@ Given a sliding window of recent `LocationPoint` samples $(t_i, \phi_i, \lambda_
   - **Downhill Skiing (`SKIING`):** $5.0 \le \bar{v} \le 30.0\text{ m/s}$ and $\dot{z} < -0.5\text{ m/s}$.
   - **Ski Lift (`LIFT`):** $2.0 \le \bar{v} \le 8.0\text{ m/s}$ and $\dot{z} > +0.5\text{ m/s}$.
   - **Stationary (`STATIONARY`):** $\bar{v} < 1.5\text{ m/s}$ or ambiguous vertical/speed signature.
-- **Hysteresis filter:** requires $K = 3$ consecutive consistent candidate evaluations before transitioning `currentActivity`, preventing false state flips at lift terminals or brief slope stops.
+- **Hysteresis filter:** requires 3 consecutive consistent candidate evaluations before transitioning `currentActivity`. This prevents false state flips at lift terminals or brief slope stops.
 
 ### 2. Metabolic Expenditure (`CalorieCalculator`)
 $$\text{Calories/min} = \frac{\text{MET}(a, v) \times \text{weight}_{\text{kg}} \times 3.5}{200}$$
-where $\text{MET}(\text{SKIING}, v) \in \{4.3, 5.3, 8.0\}$ for light ($<8\text{ m/s}$), moderate ($8\text{–}15\text{ m/s}$), and vigorous ($\ge 15\text{ m/s}$) skiing, $\text{MET}(\text{LIFT}) = 1.5$, and $\text{MET}(\text{STATIONARY}) = 1.3$.
+where $\text{MET}(\text{SKIING}, v) \in \{4.3, 5.3, 8.0\}$ for light (< 8 m/s), moderate (8 to 15 m/s), and vigorous ($\ge$ 15 m/s) skiing, $\text{MET}(\text{LIFT}) = 1.5$, and $\text{MET}(\text{STATIONARY}) = 1.3$.
 
-## Licence
+## License
 
-© 2026 SkiTracker contributors. Source code is licensed under the GNU Affero General
-Public License, version 3 ([`LICENSE`](LICENSE)).
+© 2026 SkiTracker contributors. Source code is licensed under the GNU Affero General Public License, version 3 ([`LICENSE`](LICENSE)).
 
-A commercial or closed-source license is available from the author upon request.
+Commercial licenses remain available from the author upon request.
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) and the contribution agreement in [`FLA.md`](FLA.md).
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`FLA.md`](FLA.md).

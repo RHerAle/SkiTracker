@@ -3,20 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 package com.skitracker.data
 
-enum class ActivityType {
-    SKIING,     // Going downhill
-    LIFT,       // On ski lift
-    STATIONARY  // Not moving
-}
+// ponytail: compact telemetry types
+enum class ActivityType { SKIING, LIFT, STATIONARY }
 
-/**
- * Single GPS location point
- */
 data class LocationPoint(
     val timestamp: Long,
     val latitude: Double,
     val longitude: Double,
     val altitude: Double,
-    val speed: Float,  // m/s
-    val accuracy: Float // meters
+    val speed: Float,
+    val accuracy: Float
 )
