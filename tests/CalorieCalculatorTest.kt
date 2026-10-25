@@ -58,4 +58,24 @@ class CalorieCalculatorTest {
         val expected = ((5.3f * 68f * 3.5f / 200f) * 45f) + ((1.5f * 68f * 3.5f / 200f) * 15f)
         assertEquals(expected, total, 0.05f)
     }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testInvalidWeight_Negative() {
+        calc.calculateCaloriesPerMinute(-70f, ActivityType.SKIING, 10f)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testInvalidWeight_NaN() {
+        calc.calculateCaloriesPerMinute(Float.NaN, ActivityType.SKIING, 10f)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testInvalidSpeed_Negative() {
+        calc.calculateCaloriesPerMinute(70f, ActivityType.SKIING, -5f)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testInvalidDuration_Negative() {
+        calc.calculateTotalCalories(70f, ActivityType.SKIING, -10f, 10f)
+    }
 }

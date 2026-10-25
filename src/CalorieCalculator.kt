@@ -8,6 +8,9 @@ import com.skitracker.data.ActivityType
 class CalorieCalculator {
     // ponytail: MET formula (MET * weight * 3.5) / 200
     fun calculateCaloriesPerMinute(weightKg: Float, activity: ActivityType, speedMs: Float = 0f): Float {
+        require(weightKg > 0f && weightKg.isFinite()) { "weightKg must be positive and finite" }
+        require(speedMs >= 0f && speedMs.isFinite()) { "speedMs must be non-negative and finite" }
+
         val met = when (activity) {
             ActivityType.SKIING -> when {
                 speedMs >= 15f -> 8.0f
@@ -20,6 +23,8 @@ class CalorieCalculator {
         return (met * weightKg * 3.5f) / 200f
     }
 
-    fun calculateTotalCalories(weightKg: Float, activity: ActivityType, durationMinutes: Float, avgSpeedMs: Float = 0f): Float =
-        calculateCaloriesPerMinute(weightKg, activity, avgSpeedMs) * durationMinutes
+    fun calculateTotalCalories(weightKg: Float, activity: ActivityType, durationMinutes: Float, avgSpeedMs: Float = 0f): Float {
+        require(durationMinutes >= 0f && durationMinutes.isFinite()) { "durationMinutes must be non-negative and finite" }
+        return calculateCaloriesPerMinute(weightKg, activity, avgSpeedMs) * durationMinutes
+    }
 }
