@@ -29,6 +29,14 @@ class ActivityRecognizerTest {
     }
 
     @Test
+    fun testGentleDescentSkiingDetection() {
+        val points = (0..10).map { i -> pt(i * 1000L, 2000.0 - i * 1.0, 3.5f) }
+        var activity = ActivityType.STATIONARY
+        for (i in 2..10) activity = recognizer.analyzeActivity(points.subList(i - 2, i + 1))
+        assertEquals(ActivityType.SKIING, activity)
+    }
+
+    @Test
     fun testLiftDetection() {
         val points = (0..10).map { i -> pt(i * 1000L, 1500.0 + i * 8.0, 5f) }
         var activity = ActivityType.STATIONARY

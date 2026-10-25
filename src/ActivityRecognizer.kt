@@ -26,7 +26,7 @@ class ActivityRecognizer {
 
         val candidate = when {
             avgSpeed < 1.5f -> ActivityType.STATIONARY
-            avgSpeed in 5f..30f && vz < -0.5f -> ActivityType.SKIING
+            avgSpeed in 2.0f..35f && vz < -0.4f -> ActivityType.SKIING
             avgSpeed in 2f..8f && vz > 0.5f -> ActivityType.LIFT
             else -> ActivityType.STATIONARY
         }
