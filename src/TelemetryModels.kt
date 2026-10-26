@@ -12,5 +12,17 @@ data class LocationPoint(
     val longitude: Double,
     val altitude: Double,
     val speed: Float,
-    val accuracy: Float
+    val accuracy: Float,
+    /** Tramo de la sesión: cada pausa empieza uno. Las sesiones guardadas antes no lo traen y se leen como 0. */
+    val segmento: Int = 0
 )
+
+/** Los puntos en trozos seguidos con el mismo tramo, en orden: entre dos trozos hubo una pausa. */
+fun List<LocationPoint>.tramos(): List<List<LocationPoint>> {
+    val trozos = ArrayList<MutableList<LocationPoint>>()
+    for (p in this) {
+        val ultimo = trozos.lastOrNull()
+        if (ultimo != null && ultimo.last().segmento == p.segmento) ultimo.add(p) else trozos.add(mutableListOf(p))
+    }
+    return trozos
+}
