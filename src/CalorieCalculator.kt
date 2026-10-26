@@ -17,7 +17,8 @@ class CalorieCalculator {
             ActivityType.LIFT -> 1.5f
             ActivityType.STATIONARY -> 1.3f
         }
-        return (met * weightKg * 3.5f) / 200f
+        // Bolt optimization: Pre-computed constant factor 0.0175f (3.5f / 200f) eliminates division
+        return met * weightKg * 0.0175f
     }
 
     fun calculateTotalCalories(weightKg: Float, activity: ActivityType, durationMinutes: Float, avgSpeedMs: Float = 0f): Float =
