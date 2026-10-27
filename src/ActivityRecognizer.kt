@@ -11,23 +11,24 @@ class ActivityRecognizer {
     private var consistentReadings = 0
     private var lastCandidateActivity = ActivityType.STATIONARY
 
-    // ponytail: sliding window activity classifier with hysteresis
+    // ponytail: zero-alloc sliding window activity classifier with hysteresis
     fun analyzeActivity(recentPoints: List<LocationPoint>): ActivityType {
-        if (recentPoints.size < 2) return ActivityType.STATIONARY
+        val size = recentPoints.size
+        if (size < 2) return ActivityType.STATIONARY
 
         var speedSum = 0f
-        for (p in recentPoints) speedSum += p.speed
-        val avgSpeed = speedSum / recentPoints.size
+        for (i in 0 until size) speedSum += recentPoints[i].speed
+        val avgSpeed = speedSum / size
 
-        val first = recentPoints.first()
-        val last = recentPoints.last()
+        val first = recentPoints[0]
+        val last = recentPoints[size - 1]
         val dt = (last.timestamp - first.timestamp) / 1000f
         val vz = if (dt > 0f) (last.altitude - first.altitude).toFloat() / dt else 0f
 
         val candidate = when {
             avgSpeed < 1.5f -> ActivityType.STATIONARY
-            avgSpeed in 2.0f..35f && vz < -0.4f -> ActivityType.SKIING
-            avgSpeed in 2f..8f && vz > 0.5f -> ActivityType.LIFT
+            avgSpeed >= 2.0f && avgSpeed <= 35.0f && vz < -0.4f -> ActivityType.SKIING
+            avgSpeed >= 2.0f && avgSpeed <= 8.0f && vz > 0.5f -> ActivityType.LIFT
             else -> ActivityType.STATIONARY
         }
 

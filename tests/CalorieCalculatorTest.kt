@@ -58,4 +58,16 @@ class CalorieCalculatorTest {
         val expected = ((5.3f * 68f * 3.5f / 200f) * 45f) + ((1.5f * 68f * 3.5f / 200f) * 15f)
         assertEquals(expected, total, 0.05f)
     }
+
+    @Test
+    fun testDefensiveSanitization_InvalidInputs() {
+        assertEquals(0f, calc.calculateCaloriesPerMinute(-70f, ActivityType.SKIING, 10f), 0.001f)
+        assertEquals(0f, calc.calculateCaloriesPerMinute(0f, ActivityType.SKIING, 10f), 0.001f)
+        assertEquals(0f, calc.calculateCaloriesPerMinute(Float.NaN, ActivityType.SKIING, 10f), 0.001f)
+        assertEquals(0f, calc.calculateCaloriesPerMinute(Float.POSITIVE_INFINITY, ActivityType.SKIING, 10f), 0.001f)
+        assertEquals(0f, calc.calculateCaloriesPerMinute(70f, ActivityType.SKIING, -5f), 0.001f)
+        assertEquals(0f, calc.calculateCaloriesPerMinute(70f, ActivityType.SKIING, Float.NaN), 0.001f)
+        assertEquals(0f, calc.calculateTotalCalories(70f, ActivityType.SKIING, -10f, 10f), 0.001f)
+        assertEquals(0f, calc.calculateTotalCalories(70f, ActivityType.SKIING, Float.NaN, 10f), 0.001f)
+    }
 }
