@@ -17,13 +17,26 @@ class ActivityRecognizer {
         if (size < 2) return ActivityType.STATIONARY
 
         var speedSum = 0f
-        for (i in 0 until size) speedSum += recentPoints[i].speed
-        val avgSpeed = speedSum / size
+        var validCount = 0
+        var firstValid: LocationPoint? = null
+        var lastValid: LocationPoint? = null
 
-        val first = recentPoints[0]
-        val last = recentPoints[size - 1]
-        val dt = (last.timestamp - first.timestamp) / 1000f
-        val vz = if (dt > 0f) (last.altitude - first.altitude).toFloat() / dt else 0f
+        // Security / Defensive check: filter out non-finite or invalid telemetry points
+        for (i in 0 until size) {
+            val p = recentPoints[i]
+            if (p.speed.isFinite() && p.speed >= 0f && p.altitude.isFinite()) {
+                if (firstValid == null) firstValid = p
+                lastValid = p
+                speedSum += p.speed
+                validCount++
+            }
+        }
+
+        if (validCount < 2 || firstValid == null || lastValid == null) return ActivityType.STATIONARY
+
+        val avgSpeed = speedSum / validCount
+        val dt = (lastValid.timestamp - firstValid.timestamp) / 1000f
+        val vz = if (dt > 0f && dt.isFinite()) (lastValid.altitude - firstValid.altitude).toFloat() / dt else 0f
 
         val candidate = when {
             avgSpeed < 1.5f -> ActivityType.STATIONARY

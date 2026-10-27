@@ -83,4 +83,14 @@ class ActivityRecognizerTest {
         recognizer.reset()
         assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(skiing))
     }
+
+    @Test
+    fun testDefensiveSanitization_InvalidTelemetryData() {
+        val invalidPoints = listOf(
+            pt(0, Double.NaN, Float.NaN),
+            pt(1000, 2000.0, -10f),
+            pt(2000, Double.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+        )
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(invalidPoints))
+    }
 }
