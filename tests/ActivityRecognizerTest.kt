@@ -83,4 +83,21 @@ class ActivityRecognizerTest {
         recognizer.reset()
         assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(skiing))
     }
+
+    @Test
+    fun testDefensiveSanitization_InvalidTelemetryInputs() {
+        val nanSpeed = listOf(pt(0, 2000.0, Float.NaN), pt(1000, 1990.0, 12f))
+        val negativeSpeed = listOf(pt(0, 2000.0, -5f), pt(1000, 1990.0, 12f))
+        val nanAltitude = listOf(pt(0, Double.NaN, 12f), pt(1000, 1990.0, 12f))
+        val infSpeed = listOf(pt(0, 2000.0, Float.POSITIVE_INFINITY), pt(1000, 1990.0, 12f))
+
+        val skiing = listOf(pt(0, 2000.0, 12f), pt(1000, 1990.0, 12f))
+        // Establish skiing candidate/state transitions safely
+        recognizer.analyzeActivity(skiing)
+
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(nanSpeed))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(negativeSpeed))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(nanAltitude))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(infSpeed))
+    }
 }
