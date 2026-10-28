@@ -17,15 +17,24 @@ class ActivityRecognizer {
         if (size < 2) return ActivityType.STATIONARY
 
         var speedSum = 0f
-        for (i in 0 until size) speedSum += recentPoints[i].speed
-        val avgSpeed = speedSum / size
+        var invalidInput = false
+        for (i in 0 until size) {
+            val pt = recentPoints[i]
+            if (pt.speed < 0f || !pt.speed.isFinite() || !pt.altitude.isFinite()) {
+                invalidInput = true
+                break
+            }
+            speedSum += pt.speed
+        }
 
+        val avgSpeed = if (invalidInput) 0f else speedSum / size
         val first = recentPoints[0]
         val last = recentPoints[size - 1]
         val dt = (last.timestamp - first.timestamp) / 1000f
-        val vz = if (dt > 0f) (last.altitude - first.altitude).toFloat() / dt else 0f
+        val vz = if (!invalidInput && dt > 0f) (last.altitude - first.altitude).toFloat() / dt else 0f
 
         val candidate = when {
+            invalidInput || !avgSpeed.isFinite() || !vz.isFinite() -> ActivityType.STATIONARY
             avgSpeed < 1.5f -> ActivityType.STATIONARY
             avgSpeed >= 2.0f && avgSpeed <= 35.0f && vz < -0.4f -> ActivityType.SKIING
             avgSpeed >= 2.0f && avgSpeed <= 8.0f && vz > 0.5f -> ActivityType.LIFT
