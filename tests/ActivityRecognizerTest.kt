@@ -83,4 +83,24 @@ class ActivityRecognizerTest {
         recognizer.reset()
         assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(skiing))
     }
+
+    @Test
+    fun testDefensiveSanitization_InvalidTelemetry() {
+        val nanPoint = pt(1000, Double.NaN, Float.NaN)
+        val infPoint = pt(2000, Double.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+        val negSpeedPoint = pt(3000, 1500.0, -10f)
+        val validPoint = pt(4000, 1500.0, 1.0f)
+
+        // All points invalid -> STATIONARY
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(listOf(nanPoint, infPoint, negSpeedPoint)))
+
+        // Non-positive time delta (dt <= 0)
+        val point1 = pt(1000, 2000.0, 12f)
+        val point2 = pt(1000, 1990.0, 12f)
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(listOf(point1, point2)))
+
+        // Mixed valid and invalid points -> invalid points filtered out safely
+        val mixed = listOf(validPoint, nanPoint, pt(5000, 1500.0, 1.0f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(mixed))
+    }
 }
