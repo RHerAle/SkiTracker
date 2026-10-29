@@ -13,17 +13,23 @@ class ActivityRecognizer {
 
     // ponytail: zero-alloc sliding window activity classifier with hysteresis
     fun analyzeActivity(recentPoints: List<LocationPoint>): ActivityType {
-        val size = recentPoints.size
+        // Security: Filter out invalid/corrupted GPS sensor readings (NaN, Infinite, negative speed)
+        val validPoints = recentPoints.filter { pt ->
+            pt.speed >= 0f && pt.speed.isFinite() && pt.altitude.isFinite()
+        }
+        val size = validPoints.size
         if (size < 2) return ActivityType.STATIONARY
 
         var speedSum = 0f
-        for (i in 0 until size) speedSum += recentPoints[i].speed
+        for (i in 0 until size) speedSum += validPoints[i].speed
         val avgSpeed = speedSum / size
 
-        val first = recentPoints[0]
-        val last = recentPoints[size - 1]
+        val first = validPoints[0]
+        val last = validPoints[size - 1]
         val dt = (last.timestamp - first.timestamp) / 1000f
         val vz = if (dt > 0f) (last.altitude - first.altitude).toFloat() / dt else 0f
+
+        if (!avgSpeed.isFinite() || !vz.isFinite()) return ActivityType.STATIONARY
 
         val candidate = when {
             avgSpeed < 1.5f -> ActivityType.STATIONARY
