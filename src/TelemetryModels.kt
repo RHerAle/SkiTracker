@@ -17,12 +17,28 @@ data class LocationPoint(
     val segmento: Int = 0
 )
 
-/** Los puntos en trozos seguidos con el mismo tramo, en orden: entre dos trozos hubo una pausa. */
+/**
+ * Los puntos en trozos seguidos con el mismo tramo, en orden: entre dos trozos hubo una pausa.
+ * Optimized single-pass segmentation: avoids repeated `lastOrNull()`/`last()` list lookups and allocations on every item.
+ */
 fun List<LocationPoint>.tramos(): List<List<LocationPoint>> {
-    val trozos = ArrayList<MutableList<LocationPoint>>()
-    for (p in this) {
-        val ultimo = trozos.lastOrNull()
-        if (ultimo != null && ultimo.last().segmento == p.segmento) ultimo.add(p) else trozos.add(mutableListOf(p))
+    if (isEmpty()) return emptyList()
+    val trozos = ArrayList<List<LocationPoint>>()
+    var currentSegment = this[0].segmento
+    var currentChunk = ArrayList<LocationPoint>()
+    currentChunk.add(this[0])
+
+    for (i in 1 until size) {
+        val p = this[i]
+        if (p.segmento == currentSegment) {
+            currentChunk.add(p)
+        } else {
+            trozos.add(currentChunk)
+            currentSegment = p.segmento
+            currentChunk = ArrayList()
+            currentChunk.add(p)
+        }
     }
+    trozos.add(currentChunk)
     return trozos
 }
