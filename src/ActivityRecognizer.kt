@@ -13,19 +13,22 @@ class ActivityRecognizer {
 
     // ponytail: zero-alloc sliding window activity classifier with hysteresis
     fun analyzeActivity(recentPoints: List<LocationPoint>): ActivityType {
-        val size = recentPoints.size
+        // Security: Filter out invalid/untrusted telemetry (NaN, Infinite, negative speed, non-finite altitude)
+        val validPoints = recentPoints.filter { it.speed >= 0f && it.speed.isFinite() && it.altitude.isFinite() }
+        val size = validPoints.size
         if (size < 2) return ActivityType.STATIONARY
 
         var speedSum = 0f
-        for (i in 0 until size) speedSum += recentPoints[i].speed
+        for (i in 0 until size) speedSum += validPoints[i].speed
         val avgSpeed = speedSum / size
 
-        val first = recentPoints[0]
-        val last = recentPoints[size - 1]
+        val first = validPoints[0]
+        val last = validPoints[size - 1]
         val dt = (last.timestamp - first.timestamp) / 1000f
-        val vz = if (dt > 0f) (last.altitude - first.altitude).toFloat() / dt else 0f
+        val vz = if (dt > 0f && dt.isFinite()) ((last.altitude - first.altitude) / dt).toFloat() else 0f
 
         val candidate = when {
+            !avgSpeed.isFinite() || !vz.isFinite() -> ActivityType.STATIONARY
             avgSpeed < 1.5f -> ActivityType.STATIONARY
             avgSpeed >= 2.0f && avgSpeed <= 35.0f && vz < -0.4f -> ActivityType.SKIING
             avgSpeed >= 2.0f && avgSpeed <= 8.0f && vz > 0.5f -> ActivityType.LIFT
