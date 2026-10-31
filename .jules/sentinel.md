@@ -1,0 +1,4 @@
+## 2026-10-31 - Telemetry Input Sanitization in ActivityRecognizer
+**Vulnerability:** `ActivityRecognizer.analyzeActivity` did not validate `speed` and `altitude` values in telemetry `LocationPoint` inputs. Corrupt or adversarial telemetry streams providing non-finite numbers (`NaN`, `Infinity`) or negative speeds caused arithmetic anomalies (`NaN` vertical velocities and averages), potentially corrupting classification state and causing unexpected behavior.
+**Learning:** Pure algorithmic modules processing external sensor streams (like GPS/altimeter data) often assume well-formed inputs unless defensive input sanitization is explicitly enforced at entry points.
+**Prevention:** Validate sensor/telemetry numeric inputs defensively at algorithmic boundaries using `.isFinite()` checks and range constraints, safely falling back to safe defaults like `ActivityType.STATIONARY`.
