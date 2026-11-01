@@ -16,6 +16,14 @@ class ActivityRecognizer {
         val size = recentPoints.size
         if (size < 2) return ActivityType.STATIONARY
 
+        // Sentinel: Validate telemetry inputs defensively against NaN, infinite, or negative values
+        for (i in 0 until size) {
+            val pt = recentPoints[i]
+            if (pt.speed < 0f || !pt.speed.isFinite() || !pt.altitude.isFinite()) {
+                return ActivityType.STATIONARY
+            }
+        }
+
         var speedSum = 0f
         for (i in 0 until size) speedSum += recentPoints[i].speed
         val avgSpeed = speedSum / size
