@@ -19,10 +19,26 @@ data class LocationPoint(
 
 /** Los puntos en trozos seguidos con el mismo tramo, en orden: entre dos trozos hubo una pausa. */
 fun List<LocationPoint>.tramos(): List<List<LocationPoint>> {
+    // ⚡ Bolt optimization: avoids repeated trozos.lastOrNull() and ultimo.last() lookups per element.
+    // Tracking current segment ID and active chunk avoids redundant collection inspections and iterator overhead.
+    val n = size
+    if (n == 0) return emptyList()
+
     val trozos = ArrayList<MutableList<LocationPoint>>()
-    for (p in this) {
-        val ultimo = trozos.lastOrNull()
-        if (ultimo != null && ultimo.last().segmento == p.segmento) ultimo.add(p) else trozos.add(mutableListOf(p))
+    var currentChunk = ArrayList<LocationPoint>()
+    var currentSegment = this[0].segmento
+    trozos.add(currentChunk)
+
+    for (i in 0 until n) {
+        val p = this[i]
+        if (p.segmento == currentSegment) {
+            currentChunk.add(p)
+        } else {
+            currentSegment = p.segmento
+            currentChunk = ArrayList()
+            currentChunk.add(p)
+            trozos.add(currentChunk)
+        }
     }
     return trozos
 }
