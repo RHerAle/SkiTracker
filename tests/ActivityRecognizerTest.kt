@@ -83,4 +83,34 @@ class ActivityRecognizerTest {
         recognizer.reset()
         assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(skiing))
     }
+
+    @Test
+    fun testDefensiveSanitization_InvalidInputs() {
+        // Negative speed
+        val negSpeed = listOf(pt(0, 2000.0, -10f), pt(1000, 1990.0, 12f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(negSpeed))
+
+        // NaN speed
+        val nanSpeed = listOf(pt(0, 2000.0, Float.NaN), pt(1000, 1990.0, 12f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(nanSpeed))
+
+        // Infinite speed
+        val infSpeed = listOf(pt(0, 2000.0, Float.POSITIVE_INFINITY), pt(1000, 1990.0, 12f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(infSpeed))
+
+        // NaN altitude
+        val nanAlt = listOf(pt(0, Double.NaN, 12f), pt(1000, 1990.0, 12f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(nanAlt))
+
+        // Infinite altitude
+        val infAlt = listOf(pt(0, 2000.0, 12f), pt(1000, Double.POSITIVE_INFINITY, 12f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(infAlt))
+
+        // Zero or inverted dt
+        val zeroDt = listOf(pt(1000, 2000.0, 12f), pt(1000, 1990.0, 12f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(zeroDt))
+
+        val invertedDt = listOf(pt(2000, 2000.0, 12f), pt(1000, 1990.0, 12f))
+        assertEquals(ActivityType.STATIONARY, recognizer.analyzeActivity(invertedDt))
+    }
 }
