@@ -17,13 +17,21 @@ class ActivityRecognizer {
         if (size < 2) return ActivityType.STATIONARY
 
         var speedSum = 0f
-        for (i in 0 until size) speedSum += recentPoints[i].speed
+        for (i in 0 until size) {
+            val speed = recentPoints[i].speed
+            // Sentinel: validate speed values defensively against negative, NaN, or non-finite readings
+            if (speed < 0f || !speed.isFinite()) return ActivityType.STATIONARY
+            speedSum += speed
+        }
         val avgSpeed = speedSum / size
 
         val first = recentPoints[0]
         val last = recentPoints[size - 1]
         val dt = (last.timestamp - first.timestamp) / 1000f
-        val vz = if (dt > 0f) (last.altitude - first.altitude).toFloat() / dt else 0f
+        // Sentinel: require positive duration and finite altitudes to prevent division anomalies or NaN propagation
+        if (dt <= 0f || !first.altitude.isFinite() || !last.altitude.isFinite()) return ActivityType.STATIONARY
+        val vz = (last.altitude - first.altitude).toFloat() / dt
+        if (!vz.isFinite()) return ActivityType.STATIONARY
 
         val candidate = when {
             avgSpeed < 1.5f -> ActivityType.STATIONARY
