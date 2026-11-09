@@ -1,0 +1,4 @@
+## 2026-10-27 - Input sanitization against corrupted telemetry in activity classification
+**Vulnerability:** ActivityRecognizer was susceptible to numerical anomalies (NaN/infinite coordinates, negative speeds, non-chronological timestamps, and zero time intervals dt <= 0), which could lead to NaN/infinite velocities and incorrect or unstable classification states.
+**Learning:** Telemetry feeds can produce corrupted or spoofed data points; mathematical computations such as vertical velocity (vz) or average speed without finite-number checks will produce IEEE 754 NaN values that bypass comparison thresholds.
+**Prevention:** Defensively sanitize all telemetry input samples (ensuring speed >= 0, finite speed, finite altitude, and dt > 0) and immediately fail securely to a safe default state (STATIONARY) when invalid telemetry is detected.
