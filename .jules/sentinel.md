@@ -1,0 +1,4 @@
+## 2026-11-11 - Defensive input sanitization for GPS telemetry in activity recognition
+**Vulnerability:** Corrupted, malformed, or spoofed GPS telemetry containing non-finite (NaN, Infinity), negative speeds, or non-chronological timestamps (dt <= 0) could cause calculations like vertical velocity (vz) to evaluate to NaN or division by zero, destabilizing state detection in `ActivityRecognizer`.
+**Learning:** Telemetry sliding window classifiers assume clean numerical inputs, but sensor feeds and external telemetry packets often produce invalid float values that bypass comparison thresholds or trigger undefined floating-point states.
+**Prevention:** Defensively sanitize all telemetry input samples (ensuring non-negative finite speeds, finite altitudes, and strictly positive finite timestamps) and immediately fail securely to a safe default state (`ActivityType.STATIONARY`).
